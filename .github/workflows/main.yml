@@ -35,10 +35,15 @@ jobs:
           echo "CONFIG_PACKAGE_luci-app-wolplus=m" >> .config
           make defconfig
 
-      - name: 编译 luci-app-wolplus
+      - name: 编译 luci-app-wolplus（详细日志）
         run: |
           cd openwrt
           make package/luci-app-wolplus/compile V=s -j$(nproc)
+
+      - name: 检查编译日志（输出所有日志）
+        run: |
+          cd openwrt
+          tail -n 1000 build_dir/target-*/logs/*  # 输出最新1000行日志，方便查看错误
 
       - name: 打包编译产物
         run: |

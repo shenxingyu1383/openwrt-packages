@@ -31,7 +31,7 @@ jobs:
         ./scripts/feeds install -a
         make package/luci-app-wolplus/compile V=s
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v3.1.3  # 指定具体版本
       with:
         name: luci-app-wolplus
         path: sdk/bin/packages/x86_64/base/luci-app-wolplus_*.ipk

@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # 指定为 Ubuntu 22.04 提高稳定性
 
     steps:
       - name: 检出 OpenWrt 源码（24.10）
@@ -24,29 +24,4 @@ jobs:
       - name: 更新和安装 OpenWrt Feeds
         run: |
           cd openwrt
-          echo "src-git custom https://github.com/shenxingyu1383/openwrt-packages" >> feeds.conf.default
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
-
-      - name: 选择 luci-app-wolplus 进行编译
-        run: |
-          cd openwrt
-          make defconfig
-          echo "CONFIG_PACKAGE_luci-app-wolplus=m" >> .config
-          make defconfig
-
-      - name: 编译 luci-app-wolplus
-        run: |
-          cd openwrt
-          make package/luci-app-wolplus/compile V=s -j$(nproc)
-
-      - name: 打包编译产物
-        run: |
-          mkdir -p output
-          find openwrt/bin/packages/ -name "*.ipk" -exec cp {} output/ \;
-
-      - name: 上传 `.ipk` 文件
-        uses: actions/upload-artifact@v3
-        with:
-          name: luci-app-wolplus
-          path: output/*.ipk
+          echo "src-git custom https://github.com/shenxingyu1383/openwrt-packages"

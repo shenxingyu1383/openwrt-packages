@@ -1,19 +1,25 @@
+name: Build luci-app-wolplus (OpenWrt 24.10)
+
+on:
+  push:
+    branches:
+      - main  # 当代码推送到 main 分支时触发
+  pull_request:
+    branches:
+      - main  # 当创建一个 pull request 针对 main 分支时触发
+  workflow_dispatch:  # 允许手动触发工作流
+
 jobs:
   build:
-    runs-on: ubuntu-22.04  # 指定为 Ubuntu 22.04 提高稳定性
+    runs-on: ubuntu-22.04  # 指定使用 Ubuntu 22.04 运行环境
 
     steps:
       - name: 检出 OpenWrt 源码（24.10）
         uses: actions/checkout@v4
         with:
           repository: openwrt/openwrt
-          ref: openwrt-24.10  # 使用 OpenWrt 24.10
+          ref: openwrt-24.10  # 使用 OpenWrt 24.10 版本
           path: openwrt
-
-      - name: 安装 OpenWrt 编译依赖
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential libncurses5-dev zlib1g-dev gawk git
 
       - name: 更新和安装 OpenWrt Feeds
         run: |
@@ -22,22 +28,40 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: 设置目标平台为 x86_64
+      - name: 安装编译依赖
         run: |
-          cd openwrt
-          echo "CONFIG_TARGET_x86_64=y" >> .config  # 指定目标平台为 x86_64
-          make defconfig  # 生成新的配置
-
-      - name: 安装 luci-app-wolplus 编译依赖
-        run: |
-          cd openwrt
-          echo "CONFIG_PACKAGE_luci-base=y" >> .config
-          echo "CONFIG_PACKAGE_luci-proto-core=y" >> .config
-          echo "CONFIG_PACKAGE_luci-app-firewall=y" >> .config
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            ccache \
+            git \
+            libncurses5-dev \
+            libncursesw5-dev \
+            zlib1g-dev \
+            gawk \
+            flex \
+            gettext \
+            libssl-dev \
+            xsltproc \
+            wget \
+            unzip \
+            python3-distutils \
+            python3-pip \
+            libtool \
+            automake \
+            autoconf \
+            bash \
+            bison \
+            curl \
+            libsdl1.2-dev \
+            python3-setuptools \
+            cmake \
+            libsqlite3-dev
 
       - name: 选择 luci-app-wolplus 进行编译
         run: |
           cd openwrt
+          make defconfig
           echo "CONFIG_PACKAGE_luci-app-wolplus=m" >> .config
           make defconfig
 

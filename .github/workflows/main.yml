@@ -8,11 +8,11 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # 安装依赖
+    # 安装完整依赖
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y build-essential git subversion libncurses5-dev zlib1g-dev gawk unzip python3 gcc make
+        sudo apt install -y build-essential git subversion libncurses5-dev zlib1g-dev gawk unzip python3 gcc make flex bison g++ libssl-dev
         echo "Dependencies installed successfully"
 
     # 克隆 OpenWrt 24.10 源码并构建 SDK
@@ -26,7 +26,8 @@ jobs:
         echo "CONFIG_TARGET_x86=y" >> .config
         echo "CONFIG_TARGET_x86_64=y" >> .config
         make defconfig || { echo "Defconfig failed"; exit 1; }
-        make sdk -j$(nproc) || { echo "SDK build failed"; exit 1; }
+        # 使用单线程并启用详细日志
+        make sdk -j1 V=s || { echo "SDK build failed, check logs above"; exit 1; }
         ls -lh bin/targets/x86/64/ || { echo "SDK file not found"; exit 1; }
         mv bin/targets/x86/64/openwrt-sdk-24.10.0-x86-64_*.tar.xz ../sdk.tar.xz
         echo "SDK built and moved successfully"
@@ -37,7 +38,6 @@ jobs:
         tar -xvf sdk.tar.xz || { echo "SDK extraction failed"; exit 1; }
         mv openwrt-sdk-24.10.0-x86-64_* sdk
         ls -lh sdk || { echo "SDK directory not found"; exit 1; }
-        # 从你的仓库根目录复制 luci-app-wolplus
         cp -r luci-app-wolplus sdk/package/ || { echo "Copy luci-app-wolplus failed"; exit 1; }
         cd sdk
         ./scripts/feeds update -a || { echo "SDK feeds update failed"; exit 1; }
@@ -54,11 +54,11 @@ jobs:
         path: sdk/bin/packages/x86_64/base/luci-app-wolplus_*.ipk
       continue-on-error: true
 
-    # 备用输出（如果上传失败）
+    # 备用输出
     - name: Backup output (if upload fails)
       if: failure()
       run: |
-        cd sdk/bin/packages/x86_64/base/
+        cd sdk/bin/packages/x86_64/base/ || { echo "No package directory, skipping backup"; exit 0; }
         tar -czf luci-app-wolplus.tar.gz luci-app-wolplus_*.ipk || { echo "Tar failed"; exit 1; }
         base64 luci-app-wolplus.tar.gz > output.txt || { echo "Base64 encoding failed"; exit 1; }
         cat output.txt

@@ -1,14 +1,3 @@
-name: Build luci-app-wolplus (OpenWrt 24.10)
-
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-  workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-22.04  # 指定为 Ubuntu 22.04 提高稳定性
@@ -20,6 +9,11 @@ jobs:
           repository: openwrt/openwrt
           ref: openwrt-24.10  # 使用 OpenWrt 24.10
           path: openwrt
+
+      - name: 安装 OpenWrt 编译依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncurses5-dev zlib1g-dev gawk git
 
       - name: 更新和安装 OpenWrt Feeds
         run: |
@@ -33,6 +27,13 @@ jobs:
           cd openwrt
           echo "CONFIG_TARGET_x86_64=y" >> .config  # 指定目标平台为 x86_64
           make defconfig  # 生成新的配置
+
+      - name: 安装 luci-app-wolplus 编译依赖
+        run: |
+          cd openwrt
+          echo "CONFIG_PACKAGE_luci-base=y" >> .config
+          echo "CONFIG_PACKAGE_luci-proto-core=y" >> .config
+          echo "CONFIG_PACKAGE_luci-app-firewall=y" >> .config
 
       - name: 选择 luci-app-wolplus 进行编译
         run: |

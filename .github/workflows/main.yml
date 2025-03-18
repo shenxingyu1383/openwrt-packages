@@ -24,4 +24,34 @@ jobs:
       - name: 更新和安装 OpenWrt Feeds
         run: |
           cd openwrt
-          echo "src-git custom https://github.com/shenxingyu1383/openwrt-packages"
+          echo "src-git custom https://github.com/shenxingyu1383/openwrt-packages" >> feeds.conf.default
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: 选择 luci-app-wolplus 进行编译
+        run: |
+          cd openwrt
+          make defconfig
+          echo "CONFIG_PACKAGE_luci-app-wolplus=m" >> .config
+          make defconfig
+
+      - name: 编译 luci-app-wolplus
+        run: |
+          cd openwrt
+          make package/luci-app-wolplus/compile V=s -j$(nproc)
+
+      - name: 打包编译产物
+        run: |
+          mkdir -p output
+          find openwrt/bin/packages/ -name "*.ipk" -exec cp {} output/ \;
+
+      - name: 创建 GitHub Release 并上传 `.ipk` 文件
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          release_name: Latest Build
+          draft: false
+          prerelease: false
+          files: output/*.ipk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

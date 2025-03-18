@@ -28,10 +28,15 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
+      - name: 设置目标平台为 x86_64
+        run: |
+          cd openwrt
+          echo "CONFIG_TARGET_x86_64=y" >> .config  # 指定目标平台为 x86_64
+          make defconfig  # 生成新的配置
+
       - name: 选择 luci-app-wolplus 进行编译
         run: |
           cd openwrt
-          make defconfig
           echo "CONFIG_PACKAGE_luci-app-wolplus=m" >> .config
           make defconfig
 
